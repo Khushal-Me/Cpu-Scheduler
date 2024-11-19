@@ -1,5 +1,5 @@
-// Author: Khushal Mehta
-// CPU Scheduler
+//author: Khushal
+//CPU scheduler
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,39 +32,17 @@ Process processes[MAX_PROCESSES];
 int num_processes = 0;
 Queue ready_queue;
 
-// Function prototypes to fix implicit declaration warnings
-
-// Reads input data from a file and fills the processes array
+// Function prototypes
 void read_input_file(const char* filename);
-
-// Implements the First Come First Served (FCFS) scheduling
 void fcfs();
-
-// Implements the Shortest Job First (SJF) scheduling
 void sjf();
-
-// Implements Round Robin scheduling with a given time quantum
 void round_robin(int quantum);
-
-// Prints final statistics (wait time, turnaround time) for processes
 void print_final_stats();
-
-// Checks if all processes are completed
 int all_processes_complete();
-
-// Gets the next process that has arrived based on current time
 Process* get_next_arrived_process(int current_time);
-
-// Gets the process with the shortest remaining burst time
 Process* get_shortest_job(int current_time);
-
-// Updates wait time and turnaround time for all processes
 void update_wait_times(int current_time, Process* current_process);
-
-// Checks for newly arrived processes and adds them to the ready queue
 void check_arrivals(int current_time);
-
-// Resets processes' state for a new scheduling run
 void reset_processes();
 
 // Queue operations
@@ -96,7 +74,7 @@ Process* dequeue() {
 // Check for newly arrived processes
 void check_arrivals(int current_time) {
     for (int i = 0; i < num_processes; i++) {
-        if (processes[i].arrival_time == current_time) {
+        if (processes[i].arrival_time <= current_time && !processes[i].in_queue) {
             enqueue(&processes[i]);
         }
     }
@@ -182,15 +160,21 @@ Process* get_shortest_job(int current_time) {
 // Update wait times and turnaround times for all processes
 void update_wait_times(int current_time, Process* current_process) {
     for (int i = 0; i < num_processes; i++) {
-        if (processes[i].arrival_time <= current_time &&
+        // Only update processes that have arrived and are not complete
+        if (&processes[i] != current_process && 
+            processes[i].arrival_time <= current_time && 
             processes[i].remaining_burst > 0) {
-            if (&processes[i] != current_process) {
+            
+            // Ensure we only increment wait time for processes in the queue or waiting
+            if (processes[i].in_queue || 
+                (processes[i].remaining_burst > 0 && processes[i].wait_time >= 0)) {
                 processes[i].wait_time++;
+                processes[i].turnaround_time++;
             }
-            processes[i].turnaround_time++;
         }
     }
 }
+
 
 // First Come First Served (FCFS) scheduling algorithm
 void fcfs() {
@@ -246,46 +230,55 @@ void sjf() {
     }
 }
 
-
-// Round Robin algorithm
+// Round Robin scheduling algorithm
 void round_robin(int quantum) {
     printf("Round Robin with Quantum %d\n", quantum);
     int current_time = 0;
     Process* current = NULL;
     int time_in_quantum = 0;
-
+    
+    // Reset the queue and processes before starting
     init_queue();
+    reset_processes();
 
     while (!all_processes_complete()) {
-        // Check for new arrivals
+        // Check for new arrivals and add to ready queue
         check_arrivals(current_time);
 
         // If no current process or quantum expired or process finished
-        if (current == NULL || time_in_quantum == quantum ||
-            current->remaining_burst == 0) {
-
+        if (current == NULL || time_in_quantum == quantum || 
+            (current != NULL && current->remaining_burst <= 0)) {
+            
             // If current process still has burst time, put it back in queue
             if (current != NULL && current->remaining_burst > 0) {
                 enqueue(current);
             }
-
+            
             // Get next process from queue
             current = dequeue();
             time_in_quantum = 0;
         }
 
+        // If we have a process to execute
         if (current != NULL) {
-            printf("T%d : P%d - Burst left %d, Wait time %d, Turnaround time %d\n",
-                   current_time, current->id, current->remaining_burst,
-                   current->wait_time, current->turnaround_time);
+            // Ensure we only execute if the process has arrived
+            if (current->arrival_time <= current_time) {
+                printf("T%d : P%d - Burst left %d, Wait time %d, Turnaround time %d\n",
+                       current_time, current->id, current->remaining_burst,
+                       current->wait_time, current->turnaround_time);
 
-            current->remaining_burst--;
-            time_in_quantum++;
-            update_wait_times(current_time, current);
+                // Update waiting times for other processes
+                update_wait_times(current_time, current);
 
-            // If process just finished, set current to NULL to force next dequeue
-            if (current->remaining_burst == 0) {
-                current = NULL;
+                // Execute the process
+                current->remaining_burst--;
+                time_in_quantum++;
+
+                // If process just finished, mark completion time
+                if (current->remaining_burst <= 0) {
+                    current->completion_time = current_time + 1;
+                    current = NULL;
+                }
             }
         }
 
