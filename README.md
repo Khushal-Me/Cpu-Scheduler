@@ -1,6 +1,6 @@
 # CPU Scheduler
 
-A C implementation of common CPU scheduling algorithms including First Come First Served (FCFS), Shortest Job First (SJF), and Round Robin scheduling.
+A C implementation of common CPU scheduling algorithms including First Come First Served (FCFS), Shortest Job First (SJF), and round-robin scheduling.
 
 ## 📜 Description
 
@@ -37,14 +37,14 @@ gcc -o scheduler cpu_scheduler.c
 The program accepts command-line arguments in the following format:
 
 ```natural
-./scheduler [-f|-s|-r <quantum>] <input_file>
+./scheduler [-f|-s|-r <quantum_number>] <input_file>
 ```
 
 Where:
-- `-f` : Run First Come First Served algorithm
-- `-s` : Run Shortest Job First algorithm
-- `-r <quantum>` : Run Round Robin algorithm with specified time quantum
-- `<input_file>` : Path to the input file containing process data
+- `-f`: Run First Come First Served algorithm
+- `-s`: Run Shortest Job First algorithm
+- `-r <quantum_number>`: Run Round Robin algorithm with specified time quantum
+- `<input_file>`: Path to the input file containing process data
 
 ### Input File Format
 
@@ -62,17 +62,17 @@ Each line represents a process with:
 
 1. For FCFS scheduling:
 ```bash
-./scheduler -f input.txt
+./scheduler -f input.txt|input.csv
 ```
 
 2. For SJF scheduling:
 ```bash
-./scheduler -s input.txt
+./scheduler -s input.txt|input.csv
 ```
 
 3. For Round Robin scheduling with quantum = 2:
 ```bash
-./scheduler -r 2 input.txt
+./scheduler -r 2 input.txt|input.csv
 ```
 
 ## Output
@@ -89,5 +89,5 @@ The program provides detailed output including:
 
 The scheduler uses the following key data structures:
 - `Process` struct to store process information
-- Circular queue implementation for Round Robin scheduling
+- Circular queue implementation for round-robin scheduling
 - Arrays for process management and scheduling
